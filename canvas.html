@@ -18,12 +18,16 @@ var context=canvas.getContext("2d");
 $(canvas)
 .mousedown(function(e1) {
     console.log('e1 fired');
-    context.rect(e1.offsetX, e1.offsetY, 2, 2);
+    context.rect(e1.offsetX, e1.offsetY, 1, 1);
+    context.stroke();
+    context.beginPath();
+    context.lineTo(e1.offsetX, e1.offsetY);
     context.stroke();
 
     $(window).mousemove(function(e2) {
             console.log('e2 fired')
-        context.rect(e2.offsetX, e2.offsetY,2, 2);
+        // context.rect(e2.offsetX, e2.offsetY,2, 2);
+        context.lineTo(e2.offsetX, e2.offsetY);
         context.stroke();
     });
 })
@@ -31,6 +35,7 @@ $(canvas)
     //stop drawing
     console.log('stop drawing');
     $(window).unbind("mousemove");
+    // context.closePath();
 });
 
 
