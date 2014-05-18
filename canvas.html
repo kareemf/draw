@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>draw!</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+</head>
+<body>
+
+<canvas id="mainCanvas" width="400" height="400" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script>
+
+var canvas=document.getElementById("mainCanvas");
+var context=canvas.getContext("2d");
+
+$(canvas)
+.mousedown(function(e1) {
+    console.log('e1 fired');
+    context.rect(e1.offsetX, e1.offsetY, 2, 2);
+    context.stroke();
+
+    $(window).mousemove(function(e2) {
+            console.log('e2 fired')
+        context.rect(e2.offsetX, e2.offsetY,2, 2);
+        context.stroke();
+    });
+})
+.mouseup(function() {
+    //stop drawing
+    console.log('stop drawing');
+    $(window).unbind("mousemove");
+});
+
+
+</script>
+
+</body>
+</html>
