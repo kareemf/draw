@@ -1,3 +1,4 @@
+/*global $:false */ //prevent "'$' is not defined."
 'use strict';
 
 var canvas=document.getElementById('mainCanvas');
