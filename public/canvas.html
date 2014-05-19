@@ -22,54 +22,6 @@ var context = canvas.getContext('2d');
 
 var socket = io.connect('http://localhost:3000');
 
-socket.on('connect', function () {
-    console.log('connected');
-
-});
-
-socket.on('message', function (from, data) {
-    console.log('got socket data', data);
-    context.rect(data.offsetX, data.offsetY, 1, 1);
-    context.stroke();
-});
-
-var sendSocketData = function(e){
-    var data = {
-        offsetX: e.offsetX,
-        offsetY: e.offsetY
-    };
-
-    console.log('sending data to socket');
-    socket.emit('message', guid, data);
-};
-
-$(canvas)
-.mousedown(function(e1) {
-    // console.log('e1 fired');
-    //place a single 'pixel' at point of click
-    context.rect(e1.offsetX, e1.offsetY, 1, 1);
-    context.stroke();
-
-    //begin continuous line if user wants to drag
-    context.beginPath();
-    context.lineTo(e1.offsetX, e1.offsetY);
-    context.stroke();
-    sendSocketData(e1);
-
-    $(window).mousemove(function(e2) {
-        // console.log('e2 fired');
-        // context.rect(e2.offsetX, e2.offsetY,2, 2);
-        context.lineTo(e2.offsetX, e2.offsetY);
-        context.stroke();
-        sendSocketData(e2);
-    });
-})
-.mouseup(function() {
-    //stop drawing
-    // console.log('stop drawing');
-    $(window).unbind('mousemove');
-});
-
 var clearCanvas = function(){
     // Store the current transformation matrix
     context.save();
@@ -82,11 +34,83 @@ var clearCanvas = function(){
     context.restore();
 };
 
+socket.on('connect', function () {
+    console.log('connected');
+
+});
+
+socket.on('message', function (from, data) {
+    console.log('got socket data', data);
+
+    if(data.type === 'clear'){
+        clearCanvas();
+    }
+    else if(data.type === 'lineStart'){
+        context.beginPath();
+        context.lineTo(data.offsetX, data.offsetY);
+        context.stroke();
+    }
+    else if(data.type === 'lineCont'){
+        context.lineTo(data.offsetX, data.offsetY);
+        context.stroke();
+    }
+    else if(data.type === 'rect'){
+        context.rect(data.offsetX, data.offsetY, 1, 1);
+        context.stroke();
+    }
+
+    // context.rect(data.offsetX, data.offsetY, 1, 1);
+    // context.stroke();
+});
+
+var sendSocketData = function(e, type){
+    var data = {
+        offsetX: e.offsetX,
+        offsetY: e.offsetY
+    };
+
+    data.type = type;
+
+    console.log('sending data to socket', data);
+    socket.emit('message', guid, data);
+};
+
+$(canvas)
+.mousedown(function(e1) {
+    // console.log('e1 fired');
+    //place a single 'pixel' at point of click
+    context.rect(e1.offsetX, e1.offsetY, 1, 1);
+    context.stroke();
+    sendSocketData(e1, 'rect');
+
+    //begin continuous line if user wants to drag
+    context.beginPath();
+    context.lineTo(e1.offsetX, e1.offsetY);
+    context.stroke();
+    sendSocketData(e1, 'lineStart');
+
+    $(window).mousemove(function(e2) {
+        // console.log('e2 fired');
+        // context.rect(e2.offsetX, e2.offsetY,2, 2);
+        context.lineTo(e2.offsetX, e2.offsetY);
+        context.stroke();
+        sendSocketData(e2, 'lineCont');
+    });
+})
+.mouseup(function() {
+    //stop drawing
+    // console.log('stop drawing');
+    $(window).unbind('mousemove');
+});
+
 $(window).keypress(function(e){
     console.log('keypress', e);
     if(e.keyCode === 99 || e.keyCode === 67){
         //'c' or 'C'
         clearCanvas();
+        socket.emit('message', guid, {
+            type: 'clear'
+        });
     }
 });
 
