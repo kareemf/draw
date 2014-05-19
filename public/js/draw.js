@@ -1,4 +1,5 @@
 /*global $:false */ //prevent "'$' is not defined."
+/*global io:false */ //prevent "'io' is not defined."
 'use strict';
 
 var canvas=document.getElementById('mainCanvas');
@@ -47,4 +48,11 @@ $(window).keypress(function(e){
         //'c' or 'C'
         clearCanvas();
     }
+});
+
+
+var socket = io.connect('http://localhost:3000');
+    socket.on('news', function (data) {
+    console.log(data);
+    socket.emit('my other event', { my: 'data' });
 });

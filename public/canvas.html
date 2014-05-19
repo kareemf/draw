@@ -4,12 +4,85 @@
     <meta charset="utf-8">
     <title>draw!</title>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="js/draw.js" type="text/javascript"></script>
+    <script src="js/socket.io.js" type="text/javascript"></script>
 </head>
 <body>
 
 <canvas id="mainCanvas" width="400" height="400" style="border:1px solid #d3d3d3;">
 Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script>
+var guid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+    return v.toString(16);
+});
+
+var canvas = document.getElementById('mainCanvas');
+var context = canvas.getContext('2d');
+
+var socket = io.connect('http://localhost:3000');
+socket.on('message', function (data) {
+    console.log('got socket data', data);
+});
+
+var sendSocketData = function(e){
+    var data = {
+        x: e.offsetX,
+        y: e.offsetY
+    };
+
+    console.log('sending data to socket');
+    socket.emit('message', guid, data);
+};
+
+$(canvas)
+.mousedown(function(e1) {
+    console.log('e1 fired');
+    //place a single 'pixel' at point of click
+    context.rect(e1.offsetX, e1.offsetY, 1, 1);
+    context.stroke();
+
+    //begin continuous line if user wants to drag
+    context.beginPath();
+    context.lineTo(e1.offsetX, e1.offsetY);
+    context.stroke();
+    sendSocketData(e1);
+
+    $(window).mousemove(function(e2) {
+        console.log('e2 fired');
+        // context.rect(e2.offsetX, e2.offsetY,2, 2);
+        context.lineTo(e2.offsetX, e2.offsetY);
+        context.stroke();
+        sendSocketData(e2);
+    });
+})
+.mouseup(function() {
+    //stop drawing
+    console.log('stop drawing');
+    $(window).unbind('mousemove');
+});
+
+var clearCanvas = function(){
+    // Store the current transformation matrix
+    context.save();
+
+    // Use the identity matrix while clearing the canvas
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Restore the transform
+    context.restore();
+};
+
+$(window).keypress(function(e){
+    console.log('keypress', e);
+    if(e.keyCode === 99 || e.keyCode === 67){
+        //'c' or 'C'
+        clearCanvas();
+    }
+});
+
+</script>
 
 </body>
 </html>
