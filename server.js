@@ -20,6 +20,8 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('message', function (from, data) {
     console.log('message from', from, '. data', data);
+    // sending to all clients except sender
+    socket.broadcast.emit('message', from, data);
   });
 
   socket.on('disconnect', function () {
