@@ -34,13 +34,7 @@ var clearCanvas = function(){
     context.restore();
 };
 
-socket.on('connect', function () {
-    console.log('connected');
-});
-
-socket.on('message', function (data) {
-    console.log('got socket data', data);
-
+var drawData = function(data) {
     if(data.type === 'clear'){
         clearCanvas();
     }
@@ -57,10 +51,23 @@ socket.on('message', function (data) {
         context.rect(data.offsetX, data.offsetY, 1, 1);
         context.stroke();
     }
+}
+
+socket.on('connect', function () {
+    console.log('connected');
+});
+
+socket.on('message', function (data) {
+    console.log('got socket data', data);
+    drawData(data);
 });
 
 socket.on('messages', function (data) {
     console.log('got socket DATAS', data);
+    data.forEach(function(dataString) {
+        var data = JSON.parse(dataString);
+        drawData(data);
+    });
 });
 
 var sendSocketData = function(e, type){

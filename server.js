@@ -25,17 +25,13 @@ redisclient.on("error", function (err) {
 io.sockets.on('connection', function (socket) {
     socket.broadcast.emit('user connected');
 
-    //retrieve and send the history of previously recieved messages
+    //when user connects, retrieve from redis
+    //and send all previously emitted messages
     redisclient.lrange('messages', 0, -1, function(err, items){
         if(err){
             console.log("error retrieving messages from redis: " + err);
         }
         else{
-            console.log(items.length + " items:");
-            items.forEach(function (reply, i) {
-                console.log("    " + i + ": " + reply);
-            });
-
             socket.emit('messages', items);
         }
     });
@@ -44,9 +40,9 @@ io.sockets.on('connection', function (socket) {
         console.log('message from', data.from, '. data', data);
 
         //add message to history
-        redisclient.rpush('messages', data);
+        redisclient.rpush('messages', JSON.stringify(data));
 
-        // sending to all clients except sender
+        // send to all clients except sender
         socket.broadcast.emit('message', data);
     });
 
