@@ -39,6 +39,11 @@ io.sockets.on('connection', function (socket) {
     socket.on('message', function (data) {
         console.log('message from', data.from, '. data', data);
 
+        //if screen was cleared, flush history - no longer needed
+        if(data.type === 'clear'){
+            console.log('clearing REDIS');
+            redisclient.del('messages');
+        }
         //add message to history
         redisclient.rpush('messages', JSON.stringify(data));
 
