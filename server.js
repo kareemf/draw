@@ -23,35 +23,45 @@ redisclient.on("error", function (err) {
 });
 
 io.sockets.on('connection', function (socket) {
-    socket.broadcast.emit('user connected');
+    // socket.broadcast.emit('user connected');
 
-    //when user connects, retrieve from redis
-    //and send all previously emitted messages
-    redisclient.lrange('messages', 0, -1, function(err, items){
-        if(err){
-            console.log("error retrieving messages from redis: " + err);
-        }
-        else{
-            socket.emit('messages', items);
-        }
-    });
+    socket.on('roomConnection', function(roomId, from){
+        console.log('user', from, 'connected to room', roomId);
 
-    socket.on('message', function (data) {
-        console.log('message from', data.from, '. data', data);
+        //will only listen to events targeting this room;
+        var eventKey = 'message-' + roomId;
+        var historyKey = 'messages-' + roomId;
 
-        //if screen was cleared, flush history - no longer needed
-        if(data.type === 'clear'){
-            console.log('clearing REDIS');
-            redisclient.del('messages');
-        }
-        //add message to history
-        redisclient.rpush('messages', JSON.stringify(data));
+        //when user connects, retrieve all previously emitted messages from redis
+        //and send to user
+        redisclient.lrange(historyKey, 0, -1, function(err, items){
+            if(err){
+                console.log("error retrieving messages from redis: " + err);
+            }
+            else{
+                socket.emit(historyKey, items);
+            }
+        });
 
-        // send to all clients except sender
-        socket.broadcast.emit('message', data);
+        //user has emmited an event - add to history and send broad to other users
+        socket.on(eventKey, function (data) {
+            console.log('message from', data.from, '. data', data);
+
+            //if screen was cleared, flush history - no longer needed
+            if(data.type === 'clear'){
+                console.log('clearing REDIS');
+                redisclient.del(historyKey);
+            }
+            //add message to history
+            redisclient.rpush(historyKey, JSON.stringify(data));
+
+            // send to all clients except sender
+            socket.broadcast.emit(eventKey, data);
+        });
     });
 
     socket.on('disconnect', function () {
-        socket.broadcast.emit('user disconnected');
+        //TODO: flush redis when room is empty?
+        // socket.broadcast.emit('user disconnected');
     });
 });

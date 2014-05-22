@@ -53,19 +53,48 @@ var drawData = function(data) {
     }
 }
 
+var eventKey;
+var historyKey;
+
 socket.on('connect', function () {
     console.log('connected');
-});
 
-socket.on('message', function (data) {
-    console.log('got socket data', data);
-    drawData(data);
-});
+    //determine which room user belongs in
+    var location = window.location;
+    var roomId;
 
-socket.on('messages', function (data) {
-    console.log('got socket DATAS', data);
-    data.forEach(function(dataString) {
-        var data = JSON.parse(dataString);
+    //join an existing room
+    if(location.hash.length){
+        //trim the #/
+        roomId = location.hash.substr(2);
+        console.log('joined room', roomId);
+    }
+    else{
+        //create a room we are not already in one
+        var origin = location.origin;
+
+        //use the last 12 digits of the GUID as the roomId
+        roomId = guid.substr(guid.length-12);
+        location.assign(origin + '/#/' + roomId);
+        console.log('created room', roomId);
+    }
+    socket.emit('roomConnection', roomId, guid);
+
+    eventKey = 'message-' + roomId;
+    historyKey = 'messages-' + roomId;
+
+    //after user joins room, retrieve and retrace all previous moves
+    socket.on(historyKey, function (data) {
+        console.log('got socket history data', data);
+        data.forEach(function(dataString) {
+            var data = JSON.parse(dataString);
+            drawData(data);
+        });
+    });
+
+    //send canvas events to socket server, which are then shared to other users
+    socket.on(eventKey, function (data) {
+        console.log('got socket data', data);
         drawData(data);
     });
 });
@@ -80,7 +109,7 @@ var sendSocketData = function(e, type){
     data.type = type;
 
     console.log('sending data to socket', data);
-    socket.emit('message', data);
+    socket.emit(eventKey, data);
 };
 
 $(canvas)
@@ -116,7 +145,7 @@ $(window).keypress(function(e){
     if(e.keyCode === 99 || e.keyCode === 67){
         //'c' or 'C'
         clearCanvas();
-        socket.emit('message', {
+        socket.emit(eventKey, {
             type: 'clear',
             from: guid
         });
