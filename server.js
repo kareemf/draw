@@ -31,6 +31,7 @@ io.sockets.on('connection', function (socket) {
         //will only listen to events targeting this room;
         var eventKey = 'message-' + roomId;
         var historyKey = 'messages-' + roomId;
+        var mouseEventKey = 'mouse-' + roomId;
 
         //when user connects, retrieve all previously emitted messages from redis
         //and send to user
@@ -57,6 +58,11 @@ io.sockets.on('connection', function (socket) {
 
             // send to all clients except sender
             socket.broadcast.emit(eventKey, data);
+        });
+
+        //track mouse movement
+        socket.on(mouseEventKey, function (data) {
+           socket.broadcast.emit(mouseEventKey, data);
         });
     });
 

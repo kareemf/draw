@@ -51,10 +51,24 @@ var drawData = function(data) {
         context.rect(data.offsetX, data.offsetY, 1, 1);
         context.stroke();
     }
-}
+};
+
+var sendSocketData = function(e, type, key){
+    var data = {
+        offsetX: e.offsetX,
+        offsetY: e.offsetY,
+        from: guid
+    };
+
+    data.type = type;
+
+    console.log('sending data to socket', data);
+    socket.emit(key, data);
+};
 
 var eventKey;
 var historyKey;
+var mouseEventKey;
 
 socket.on('connect', function () {
     console.log('connected');
@@ -82,6 +96,7 @@ socket.on('connect', function () {
 
     eventKey = 'message-' + roomId;
     historyKey = 'messages-' + roomId;
+    mouseEventKey = 'mouse-' + roomId;
 
     //after user joins room, retrieve and retrace all previous moves
     socket.on(historyKey, function (data) {
@@ -97,20 +112,13 @@ socket.on('connect', function () {
         console.log('got socket data', data);
         drawData(data);
     });
+
+    //track other users' mosue movement
+    socket.on(mouseEventKey, function (data) {
+        console.log('got mouse data', data);
+    });
 });
 
-var sendSocketData = function(e, type){
-    var data = {
-        offsetX: e.offsetX,
-        offsetY: e.offsetY,
-        from: guid
-    };
-
-    data.type = type;
-
-    console.log('sending data to socket', data);
-    socket.emit(eventKey, data);
-};
 
 $(canvas)
 .mousedown(function(e1) {
@@ -118,26 +126,33 @@ $(canvas)
     //place a single 'pixel' at point of click
     context.rect(e1.offsetX, e1.offsetY, 1, 1);
     context.stroke();
-    sendSocketData(e1, 'rect');
+    sendSocketData(e1, 'rect', eventKey);
 
     //begin continuous line if user wants to drag
     context.beginPath();
     context.lineTo(e1.offsetX, e1.offsetY);
     context.stroke();
-    sendSocketData(e1, 'lineStart');
+    sendSocketData(e1, 'lineStart', eventKey);
 
     $(window).mousemove(function(e2) {
         // console.log('e2 fired');
         // context.rect(e2.offsetX, e2.offsetY,2, 2);
         context.lineTo(e2.offsetX, e2.offsetY);
         context.stroke();
-        sendSocketData(e2, 'lineCont');
+        sendSocketData(e2, 'lineCont', eventKey);
     });
 })
 .mouseup(function() {
     //stop drawing
     // console.log('stop drawing');
     $(window).unbind('mousemove');
+})
+.mousemove(function(e){
+    console.log('x', e.offsetX, 'y', e.offsetY);
+
+
+    sendSocketData(e, 'mousemove', mouseEventKey);
+
 });
 
 $(window).keypress(function(e){
