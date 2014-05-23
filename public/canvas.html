@@ -57,7 +57,7 @@ var sendSocketData = function(e, type, key){
     var data = {
         offsetX: e.offsetX,
         offsetY: e.offsetY,
-        from: guid
+        userId: guid
     };
 
     data.type = type;
@@ -97,6 +97,7 @@ socket.on('connect', function () {
     eventKey = 'message-' + roomId;
     historyKey = 'messages-' + roomId;
     mouseEventKey = 'mouse-' + roomId;
+    var roomConnectionKey = 'userConnected-' + roomId;
 
     //after user joins room, retrieve and retrace all previous moves
     socket.on(historyKey, function (data) {
@@ -106,6 +107,12 @@ socket.on('connect', function () {
             drawData(data);
         });
     });
+
+    //listen for other users joining the room
+    socket.on(roomConnectionKey, function(userId){
+        console.log(userId, 'has joined the room');
+    });
+
 
     //send canvas events to socket server, which are then shared to other users
     socket.on(eventKey, function (data) {
@@ -118,7 +125,6 @@ socket.on('connect', function () {
         console.log('got mouse data', data);
     });
 });
-
 
 $(canvas)
 .mousedown(function(e1) {
@@ -148,9 +154,7 @@ $(canvas)
     $(window).unbind('mousemove');
 })
 .mousemove(function(e){
-    console.log('x', e.offsetX, 'y', e.offsetY);
-
-
+    // console.log('x', e.offsetX, 'y', e.offsetY);
     sendSocketData(e, 'mousemove', mouseEventKey);
 
 });
@@ -162,7 +166,7 @@ $(window).keypress(function(e){
         clearCanvas();
         socket.emit(eventKey, {
             type: 'clear',
-            from: guid
+            userId: guid
         });
     }
 });

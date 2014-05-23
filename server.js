@@ -25,13 +25,17 @@ redisclient.on("error", function (err) {
 io.sockets.on('connection', function (socket) {
     // socket.broadcast.emit('user connected');
 
-    socket.on('roomConnection', function(roomId, from){
-        console.log('user', from, 'connected to room', roomId);
+    socket.on('roomConnection', function(roomId, userId){
+        console.log('user', userId, 'connected to room', roomId);
 
         //will only listen to events targeting this room;
         var eventKey = 'message-' + roomId;
         var historyKey = 'messages-' + roomId;
         var mouseEventKey = 'mouse-' + roomId;
+        var roomConnectionKey = 'userConnected-' + roomId;
+
+        //inform other users that someone has joined the room
+        socket.broadcast.emit(roomConnectionKey, userId);
 
         //when user connects, retrieve all previously emitted messages from redis
         //and send to user
@@ -46,7 +50,7 @@ io.sockets.on('connection', function (socket) {
 
         //user has emmited an event - add to history and send broad to other users
         socket.on(eventKey, function (data) {
-            console.log('message from', data.from, '. data', data);
+            console.log('message from', data.userId, '. data', data);
 
             //if screen was cleared, flush history - no longer needed
             if(data.type === 'clear'){
