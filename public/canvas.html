@@ -124,7 +124,7 @@ socket.on('connect', function () {
             console.log('got mouse data', data);
 
             //TODO: find cursor div for user, update position
-            var cursor = document.getElementById('#' + userId);
+            var cursor = $('#' + userId)[0];
             console.log('cursor #' + userId, cursor );
             context.drawImage(cursor, data.offsetX, data.offsetY);
         });
