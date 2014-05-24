@@ -111,18 +111,29 @@ socket.on('connect', function () {
     //listen for other users joining the room
     socket.on(roomConnectionKey, function(userId){
         console.log(userId, 'has joined the room');
-    });
 
+        //create a cursor for new user
+        $("<img/>", {
+            "id": userId,
+            "class": "cursor",
+            "src": "cur2014.png"
+        }).appendTo(canvas);
+
+        //track other users' mouse movement
+        socket.on(mouseEventKey, function (data) {
+            console.log('got mouse data', data);
+
+            //TODO: find cursor div for user, update position
+            var cursor = document.getElementById('#' + userId);
+            console.log('cursor #' + userId, cursor );
+            context.drawImage(cursor, data.offsetX, data.offsetY);
+        });
+    });
 
     //send canvas events to socket server, which are then shared to other users
     socket.on(eventKey, function (data) {
         console.log('got socket data', data);
         drawData(data);
-    });
-
-    //track other users' mosue movement
-    socket.on(mouseEventKey, function (data) {
-        console.log('got mouse data', data);
     });
 });
 
@@ -155,8 +166,8 @@ $(canvas)
 })
 .mousemove(function(e){
     // console.log('x', e.offsetX, 'y', e.offsetY);
+    //TODO: mod 3 or something like that?
     sendSocketData(e, 'mousemove', mouseEventKey);
-
 });
 
 $(window).keypress(function(e){
