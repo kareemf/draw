@@ -25,7 +25,7 @@ redisclient.on("error", function (err) {
 var userIdsToSocketIds = {};
 
 io.sockets.on('connection', function (socket) {
-    // socket.broadcast.emit('user connected');
+    console.log('user connected to socket', socket.id);
 
     socket.on('roomConnection', function(roomId, userId){
         console.log('user', userId, 'connected to room', roomId);
@@ -43,12 +43,12 @@ io.sockets.on('connection', function (socket) {
         socket.broadcast.emit(roomConnectionKey, userId);
 
         //other users will inform you of thier presence in the room
-        socket.on(roomConnectionHandshakeKey, function(roomId, userId){
-            console.log('shaking hands with', userId);
+        socket.on(roomConnectionHandshakeKey, function(handshake){
+            console.log('handshake:', handshake);
 
-            var socketId = userIdsToSocketIds[userId];
+            var socketId = userIdsToSocketIds[handshake.initiator];
             if(socketId){
-                io.sockets.socket(socketId).emit(roomConnectionHandshakeKey);
+                io.sockets.socket(socketId).emit(roomConnectionHandshakeKey, handshake);
             }
             else{
                 console.log('couldnt find socket id for hand shake with', userId);

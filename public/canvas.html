@@ -113,10 +113,11 @@ socket.on('connect', function () {
 
     //after you have told everyone that you have joined thier room,
     //they should shake your hand and tell you about themselves
-    socket.on(roomConnectionHandshakeKey, function(roomId, guid){
+    socket.on(roomConnectionHandshakeKey, function(handshake){
         //make a cursor and track movements for existing room users
-        console.log(userId, 'has shaken your hand');
+        console.log(handshake.responder, 'has shaken your hand');
 
+        var userId = handshake.responder;
         var cursor = createCursor(userId);
 
         //place cursor at inital position
@@ -143,7 +144,13 @@ socket.on('connect', function () {
 
         //inform the new user of your precense in the room
         //currently you know about them, but they don't know about you
-        socket.emit(roomConnectionHandshakeKey, roomId, userId);
+        var handshake = {
+            roomId: roomId,
+            initiator: userId,
+            responder: guid
+        };
+        //TODO: make handshake class?
+        socket.emit(roomConnectionHandshakeKey, handshake);
     });
 
     //track other user's mouse movement
