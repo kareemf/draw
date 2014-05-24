@@ -22,20 +22,38 @@ redisclient.on("error", function (err) {
     console.log("redis error " + err);
 });
 
+var userIdsToSocketIds = {};
+
 io.sockets.on('connection', function (socket) {
     // socket.broadcast.emit('user connected');
 
     socket.on('roomConnection', function(roomId, userId){
         console.log('user', userId, 'connected to room', roomId);
 
+        userIdsToSocketIds[userId] = socket.id;
+
         //will only listen to events targeting this room;
         var eventKey = 'message-' + roomId;
         var historyKey = 'messages-' + roomId;
         var mouseEventKey = 'mouse-' + roomId;
         var roomConnectionKey = 'userConnected-' + roomId;
+        var roomConnectionHandshakeKey = 'handshakeConnection-' + roomId;
 
-        //inform other users that someone has joined the room
+        //inform other users that you have joined the room
         socket.broadcast.emit(roomConnectionKey, userId);
+
+        //other users will inform you of thier presence in the room
+        socket.on(roomConnectionHandshakeKey, function(roomId, userId){
+            console.log('shaking hands with', userId);
+
+            var socketId = userIdsToSocketIds[userId];
+            if(socketId){
+                io.sockets.socket(socketId).emit(roomConnectionHandshakeKey);
+            }
+            else{
+                console.log('couldnt find socket id for hand shake with', userId);
+            }
+        });
 
         //when user connects, retrieve all previously emitted messages from redis
         //and send to user

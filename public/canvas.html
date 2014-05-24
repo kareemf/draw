@@ -66,6 +66,15 @@ var sendSocketData = function(e, type, key){
     socket.emit(key, data);
 };
 
+var createCursor = function(userId){
+    //create a cursor for the user
+    return $("<img/>", {
+        "id": userId,
+        "class": "cursor",
+        "src": "cur2014.png"
+    }).appendTo(canvas)[0];
+};
+
 var eventKey;
 var historyKey;
 var mouseEventKey;
@@ -92,14 +101,29 @@ socket.on('connect', function () {
         location.assign(origin + '/#/' + roomId);
         console.log('created room', roomId);
     }
-    socket.emit('roomConnection', roomId, guid);
 
     eventKey = 'message-' + roomId;
     historyKey = 'messages-' + roomId;
     mouseEventKey = 'mouse-' + roomId;
     var roomConnectionKey = 'userConnected-' + roomId;
+    var roomConnectionHandshakeKey = 'handshakeConnection-' + roomId;
 
-    //after user joins room, retrieve and retrace all previous moves
+    //tell everyone that you have joined their room
+    socket.emit('roomConnection', roomId, guid);
+
+    //after you have told everyone that you have joined thier room,
+    //they should shake your hand and tell you about themselves
+    socket.on(roomConnectionHandshakeKey, function(roomId, guid){
+        //make a cursor and track movements for existing room users
+        console.log(userId, 'has shaken your hand');
+
+        var cursor = createCursor(userId);
+
+        //place cursor at inital position
+        context.drawImage(cursor, 100, 100);
+    });
+
+    //after you join the room, retrieve and retrace all previous moves
     socket.on(historyKey, function (data) {
         console.log('got socket history data', data);
         data.forEach(function(dataString) {
@@ -112,22 +136,22 @@ socket.on('connect', function () {
     socket.on(roomConnectionKey, function(userId){
         console.log(userId, 'has joined the room');
 
-        //create a cursor for new user
-        $("<img/>", {
-            "id": userId,
-            "class": "cursor",
-            "src": "cur2014.png"
-        }).appendTo(canvas);
+        var cursor = createCursor(userId);
 
-        //track other users' mouse movement
-        socket.on(mouseEventKey, function (data) {
-            console.log('got mouse data', data);
+        //place cursor at inital position
+        context.drawImage(cursor, 100, 100);
 
-            //TODO: find cursor div for user, update position
-            var cursor = $('#' + userId)[0];
-            console.log('cursor #' + userId, cursor );
-            context.drawImage(cursor, data.offsetX, data.offsetY);
-        });
+        //inform the new user of your precense in the room
+        //currently you know about them, but they don't know about you
+        socket.emit(roomConnectionHandshakeKey, roomId, userId);
+    });
+
+    //track other user's mouse movement
+    socket.on(mouseEventKey, function (data) {
+        console.log('got mouse data', data);
+
+        var cursor = $('#' + data.userId)[0];
+        cursor.moveTo(cursor, data.offsetX, data.offsetY);
     });
 
     //send canvas events to socket server, which are then shared to other users
