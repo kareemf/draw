@@ -111,6 +111,8 @@ socket.on('connect', function () {
     mouseEventKey = 'mouse-' + roomId;
     var roomConnectionKey = 'userConnected-' + roomId;
     var roomConnectionHandshakeKey = 'handshakeConnection-' + roomId;
+    var roomDisconnectionKey = 'userDisconnected-' + roomId;
+
 
     //tell everyone that you have joined their room
     socket.emit('roomConnection', roomId, guid);
@@ -167,6 +169,15 @@ socket.on('connect', function () {
     socket.on(eventKey, function (data) {
         console.log('got socket data', data);
         drawData(data);
+    });
+
+    //listen for other users leaving the room
+    socket.on(roomDisconnectionKey, function(userId){
+        console.log(userId, 'is leaving room');
+
+        //when a user leaves, delete his cursor
+        var cursor = $('#' + userId)[0];
+        cursor.remove();
     });
 });
 

@@ -23,6 +23,9 @@ redisclient.on("error", function (err) {
 });
 
 var userIdsToSocketIds = {};
+var socketIdsToUserIds = {};
+
+//todo: track users in room
 
 io.sockets.on('connection', function (socket) {
     console.log('user connected to socket', socket.id);
@@ -31,6 +34,7 @@ io.sockets.on('connection', function (socket) {
         console.log('user', userId, 'connected to room', roomId);
 
         userIdsToSocketIds[userId] = socket.id;
+        socketIdsToUserIds[socket.id] = userId
 
         //will only listen to events targeting this room;
         var eventKey = 'message-' + roomId;
@@ -38,6 +42,7 @@ io.sockets.on('connection', function (socket) {
         var mouseEventKey = 'mouse-' + roomId;
         var roomConnectionKey = 'userConnected-' + roomId;
         var roomConnectionHandshakeKey = 'handshakeConnection-' + roomId;
+        var roomDisconnectionKey = 'userDisconnected-' + roomId;
 
         //inform other users that you have joined the room
         socket.broadcast.emit(roomConnectionKey, userId);
@@ -86,10 +91,19 @@ io.sockets.on('connection', function (socket) {
         socket.on(mouseEventKey, function (data) {
            socket.broadcast.emit(mouseEventKey, data);
         });
-    });
 
-    socket.on('disconnect', function () {
-        //TODO: flush redis when room is empty?
-        // socket.broadcast.emit('user disconnected');
+        socket.on('disconnect', function () {
+            console.log('user  disconnected from', socket.id);
+
+            // find the user belonging to this socket,
+            var userId = socketIdsToUserIds[socket.id];
+            if(!userId){
+                return console.error('unable to find user belonging to socket', socket.id);
+            }
+            // inform everyone of their disconnection
+            socket.broadcast.emit(roomDisconnectionKey, userId);
+
+            //TODO: flush redis when room is empty?
+        });
     });
 });
