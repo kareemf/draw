@@ -15,6 +15,7 @@
   "author": "Kareem Francis",
   "dependencies": {
     "express": "^4.2.0",
+    "redis": "^0.10.2",
     "socket.io": "^0.9.16"
   },
   "devDependencies": {
