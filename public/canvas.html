@@ -72,7 +72,11 @@ var createCursor = function(userId){
         "id": userId,
         "class": "cursor",
         "src": "cur2014.png"
-    }).appendTo(canvas)[0];
+    })
+    .css({
+        position: 'absolute'
+    })
+    .appendTo('body')[0];
 };
 
 var eventKey;
@@ -118,10 +122,7 @@ socket.on('connect', function () {
         console.log(handshake.responder, 'has shaken your hand');
 
         var userId = handshake.responder;
-        var cursor = createCursor(userId);
-
-        //place cursor at inital position
-        context.drawImage(cursor, 100, 100);
+        createCursor(userId);
     });
 
     //after you join the room, retrieve and retrace all previous moves
@@ -139,9 +140,6 @@ socket.on('connect', function () {
 
         var cursor = createCursor(userId);
 
-        //place cursor at inital position
-        context.drawImage(cursor, 100, 100);
-
         //inform the new user of your precense in the room
         //currently you know about them, but they don't know about you
         var handshake = {
@@ -158,7 +156,11 @@ socket.on('connect', function () {
         console.log('got mouse data', data);
 
         var cursor = $('#' + data.userId)[0];
-        cursor.moveTo(cursor, data.offsetX, data.offsetY);
+        // context.drawImage(cursor, data.offsetX, data.offsetY);
+        $(cursor).css({
+            left:data.offsetX,
+            top:data.offsetY
+        });
     });
 
     //send canvas events to socket server, which are then shared to other users
