@@ -169,6 +169,31 @@ socket.on('connect', function () {
         var cursor = $('#' + userId)[0];
         cursor.remove();
     });
+
+    //save the canvas on appropriate keypress
+    $(window).keypress(function(e){
+        console.log('keypress', e);
+
+        if(e.keyCode === 115 || e.keyCode === 83){
+            //'s' or 'S'
+            console.log('saving canvas');
+
+            try {
+                var isFileSaverSupported = !!new Blob;
+
+                if(isFileSaverSupported){
+                    canvas.toBlob(function(blob) {
+                        saveAs(blob, 'draw-' + roomId + '.png');
+                    });
+                }
+                else{
+                    console.error('FileSave is not supported');
+                }
+            } catch (e) {
+                console.error('error saving canvas', e);
+            }
+        }
+    });
 });
 
 $(canvas)
