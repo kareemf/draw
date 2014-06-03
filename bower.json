@@ -1,0 +1,22 @@
+{
+  "name": "draw",
+  "version": "0.0.0",
+  "authors": [
+    "Kareem Francis <francis.kareem+git@gmail.com>"
+  ],
+  "description": "multi-user drawing app!",
+  "main": "public/js/draw.js",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "public/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "FileSaver": "*",
+  }
+}
