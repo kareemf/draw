@@ -18,5 +18,6 @@
   ],
   "dependencies": {
     "FileSaver": "*",
+    "jquery": "~1.11.1"
   }
 }
