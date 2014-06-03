@@ -72,13 +72,13 @@ var createCursor = function(userId){
 var eventKey;
 var historyKey;
 var mouseEventKey;
+var roomId;
 
 socket.on('connect', function () {
     console.log('connected');
 
     //determine which room user belongs in
     var location = window.location;
-    var roomId;
 
     //join an existing room
     if(location.hash.length){
@@ -169,31 +169,6 @@ socket.on('connect', function () {
         var cursor = $('#' + userId)[0];
         cursor.remove();
     });
-
-    //save the canvas on appropriate keypress
-    $(window).keypress(function(e){
-        console.log('keypress', e);
-
-        if(e.keyCode === 115 || e.keyCode === 83){
-            //'s' or 'S'
-            console.log('saving canvas');
-
-            try {
-                var isFileSaverSupported = !!new Blob;
-
-                if(isFileSaverSupported){
-                    canvas.toBlob(function(blob) {
-                        saveAs(blob, 'draw-' + roomId + '.png');
-                    });
-                }
-                else{
-                    console.error('FileSave is not supported');
-                }
-            } catch (e) {
-                console.error('error saving canvas', e);
-            }
-        }
-    });
 });
 
 $(canvas)
@@ -231,6 +206,7 @@ $(canvas)
 
 $(window).keypress(function(e){
     console.log('keypress', e);
+    //clear the canvas on appropriate keypress
     if(e.keyCode === 99 || e.keyCode === 67){
         //'c' or 'C'
         clearCanvas();
@@ -238,5 +214,25 @@ $(window).keypress(function(e){
             type: 'clear',
             userId: guid
         });
+    }
+    //save the canvas on appropriate keypress
+    else if(e.keyCode === 115 || e.keyCode === 83){
+        //'s' or 'S'
+        console.log('saving canvas');
+
+        try {
+            var isFileSaverSupported = !!new Blob;
+
+            if(isFileSaverSupported){
+                canvas.toBlob(function(blob) {
+                    saveAs(blob, 'draw-' + roomId + '.png');
+                });
+            }
+            else{
+                console.error('FileSave is not supported');
+            }
+        } catch (e) {
+            console.error('error saving canvas', e);
+        }
     }
 });
