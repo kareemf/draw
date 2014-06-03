@@ -18,6 +18,7 @@
   ],
   "dependencies": {
     "FileSaver": "*",
-    "jquery": "~1.11.1"
+    "jquery": "~1.11.1",
+    "canvas-toBlob.js": "~0.1.3"
   }
 }
