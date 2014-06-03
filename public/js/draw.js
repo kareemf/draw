@@ -73,6 +73,7 @@ var eventKey;
 var historyKey;
 var mouseEventKey;
 var roomId;
+var username;
 
 socket.on('connect', function () {
     console.log('connected');
@@ -95,6 +96,8 @@ socket.on('connect', function () {
         location.assign(origin + '/#/' + roomId);
         console.log('created room', roomId);
     }
+
+    username = prompt("Username?", guid.substr(guid.length-12));
 
     eventKey = 'message-' + roomId;
     historyKey = 'messages-' + roomId;
