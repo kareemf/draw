@@ -112,6 +112,14 @@ var deleteBadge = function(userId){
     badge.remove();
 }
 
+var hideBadge = function(userId){
+    $('#' + userId + '-badge').hide();
+}
+
+var showBadge = function(userId){
+    $('#' + userId + '-badge').show();
+}
+
 var randomHexColor = function(){
     //borrowed from Paul Irish
     //(http://www.paulirish.com/2009/random-hex-color-code-snippets)
@@ -272,7 +280,16 @@ $(canvas)
     updateBadge({userId: guid, offsetX: e.offsetX, offsetY: e.offsetY});
 });
 
-$(window).keypress(function(e){
+$(window)
+.mousedown(function(e1) {
+    //hide your badge to keep it out of the way
+    hideBadge(guid);
+})
+.mouseup(function() {
+    //show badge - hidden on mouse down to keep out of the way
+    showBadge(guid);
+})
+.keypress(function(e){
     console.log('keypress', e);
     //clear the canvas on appropriate keypress
     if(e.keyCode === 99 || e.keyCode === 67){
