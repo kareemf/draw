@@ -99,6 +99,19 @@ var createBadge = function(userId, color){
     .appendTo('body')[0];
 }
 
+var updateBadge = function(data){
+    var badge = $('#' + data.userId + '-badge')[0];
+    $(badge).css({
+        left:data.offsetX,
+        top:data.offsetY
+    });
+}
+
+var deleteBadge = function(userId){
+    var badge = $('#' + userId + '-badge')[0];
+    badge.remove();
+}
+
 var randomHexColor = function(){
     //borrowed from Paul Irish
     //(http://www.paulirish.com/2009/random-hex-color-code-snippets)
@@ -202,6 +215,7 @@ socket.on('connect', function () {
     socket.on(mouseEventKey, function (data) {
         console.log('got mouse data', data);
         updateCursor(data);
+        updateBadge(data);
     });
 
     //send canvas events to socket server, which are then shared to other users
@@ -216,6 +230,7 @@ socket.on('connect', function () {
 
         //when a user leaves, delete his cursor
         deleteCursor(userId);
+        deleteBadge(userId);
     });
 });
 
