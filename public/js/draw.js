@@ -102,8 +102,8 @@ var createBadge = function(userId, color){
 var updateBadge = function(data){
     var badge = $('#' + data.userId + '-badge')[0];
     $(badge).css({
-        left:data.offsetX,
-        top:data.offsetY
+        left:data.offsetX + 15,
+        top:data.offsetY  + 10
     });
 }
 
