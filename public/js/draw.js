@@ -154,6 +154,9 @@ var username = prompt("Username?", guid.substr(guid.length-12));
 var userColor = randomHexColor();
 var currentUser = new User(guid, username, userColor);
 
+//create a badge for your own cursor
+createBadge(guid, userColor);
+
 socket.on('connect', function () {
     console.log('connected');
 
@@ -198,7 +201,7 @@ socket.on('connect', function () {
         console.log(user, 'has joined the room');
 
         createCursor(user.guid);
-        createBadge(user.guid, userColor)
+        createBadge(user.guid, user.color)
 
         //inform the new user of your precense in the room
         //currently you know about them, but they don't know about you
@@ -266,6 +269,7 @@ $(canvas)
     //TODO: mod 3 or something like that?
 
     sendSocketData(e, 'mousemove', mouseEventKey);
+    updateBadge({userId: guid, offsetX: e.offsetX, offsetY: e.offsetY});
 });
 
 $(window).keypress(function(e){
