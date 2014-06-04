@@ -69,20 +69,32 @@ var createCursor = function(userId){
     .appendTo('body')[0];
 };
 
-var eventKey;
-var historyKey;
-var mouseEventKey;
-var roomId;
-var username;
+var createBadge = function(userId, color){
+    //creates a colored badge which follows each user's cursor
+    return $("<div>", {
+        "id": userId + '-badge',
+        "class": "badge",
+    })
+    .css({
+        'position': 'absolute',
+        'border-radius': '50%',
+        'background-color': color,
+        'width': '10px',
+        'height': '10px'
+    })
+    .appendTo('body')[0];
+}
 
-socket.on('connect', function () {
-    console.log('connected');
+var randomHexColor = function(){
+    //borrowed from Paul Irish
+    //(http://www.paulirish.com/2009/random-hex-color-code-snippets)
+    return '#'+Math.floor(Math.random()*16777215).toString(16);
+}
 
-    //determine which room user belongs in
+var joinOrCreateRoom = function(){
     var location = window.location;
-
-    //join an existing room
     if(location.hash.length){
+        //join an existing room
         //trim the #/
         roomId = location.hash.substr(2);
         console.log('joined room', roomId);
@@ -96,8 +108,30 @@ socket.on('connect', function () {
         location.assign(origin + '/#/' + roomId);
         console.log('created room', roomId);
     }
+    return roomId;
+}
 
-    username = prompt("Username?", guid.substr(guid.length-12));
+var User = function(guid, username, color){
+    this.guid = guid;
+    this.username = username;
+    this.color = color;
+}
+
+var eventKey;
+var historyKey;
+var mouseEventKey;
+var roomId;
+var currentUser;
+
+socket.on('connect', function () {
+    console.log('connected');
+
+    //determine which room user belongs in
+    roomId = joinOrCreateRoom();
+
+    var username = prompt("Username?", guid.substr(guid.length-12)); //TODO
+    var userColor = randomHexColor();
+    currentUser = new User(guid, username, userColor);
 
     eventKey = 'message-' + roomId;
     historyKey = 'messages-' + roomId;
@@ -108,7 +142,7 @@ socket.on('connect', function () {
 
 
     //tell everyone that you have joined their room
-    socket.emit('roomConnection', roomId, guid);
+    socket.emit('roomConnection', roomId, currentUser);
 
     //after you have told everyone that you have joined thier room,
     //they should shake your hand and tell you about themselves
@@ -116,8 +150,11 @@ socket.on('connect', function () {
         //make a cursor and track movements for existing room users
         console.log(handshake.responder, 'has shaken your hand');
 
-        var userId = handshake.responder;
+        var userId = handshake.responder.guid;
+        var userColor = handshake.responder.color;
+
         createCursor(userId);
+        createBadge(userId, userColor)
     });
 
     //after you join the room, retrieve and retrace all previous moves
@@ -130,17 +167,18 @@ socket.on('connect', function () {
     });
 
     //listen for other users joining the room
-    socket.on(roomConnectionKey, function(userId){
-        console.log(userId, 'has joined the room');
+    socket.on(roomConnectionKey, function(user){
+        console.log(user, 'has joined the room');
 
-        var cursor = createCursor(userId);
+        createCursor(user.guid);
+        createBadge(user.guid, userColor)
 
         //inform the new user of your precense in the room
         //currently you know about them, but they don't know about you
         var handshake = {
             roomId: roomId,
-            initiator: userId,
-            responder: guid
+            initiator: user,
+            responder: currentUser
         };
         //TODO: make handshake class?
         socket.emit(roomConnectionHandshakeKey, handshake);
