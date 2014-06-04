@@ -95,7 +95,7 @@ io.sockets.on('connection', function (socket) {
         });
 
         socket.on('disconnect', function () {
-            console.log('user  disconnected from', socket.id);
+            console.log('user disconnected from', socket.id);
 
             // find the user belonging to this socket,
             var userId = socketIdsToUserIds[socket.id];

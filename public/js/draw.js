@@ -69,6 +69,20 @@ var createCursor = function(userId){
     .appendTo('body')[0];
 };
 
+var updateCursor = function(data){
+    var cursor = $('#' + data.userId)[0];
+    // context.drawImage(cursor, data.offsetX, data.offsetY);
+    $(cursor).css({
+        left:data.offsetX,
+        top:data.offsetY
+    });
+}
+
+var deleteCursor = function(userId){
+    var cursor = $('#' + userId)[0];
+    cursor.remove();
+}
+
 var createBadge = function(userId, color){
     //creates a colored badge which follows each user's cursor
     return $("<div>", {
@@ -121,17 +135,17 @@ var eventKey;
 var historyKey;
 var mouseEventKey;
 var roomId;
-var currentUser;
+
+//TODO: better default username
+var username = prompt("Username?", guid.substr(guid.length-12));
+var userColor = randomHexColor();
+var currentUser = new User(guid, username, userColor);
 
 socket.on('connect', function () {
     console.log('connected');
 
     //determine which room user belongs in
     roomId = joinOrCreateRoom();
-
-    var username = prompt("Username?", guid.substr(guid.length-12)); //TODO
-    var userColor = randomHexColor();
-    currentUser = new User(guid, username, userColor);
 
     eventKey = 'message-' + roomId;
     historyKey = 'messages-' + roomId;
@@ -187,13 +201,7 @@ socket.on('connect', function () {
     //track other user's mouse movement
     socket.on(mouseEventKey, function (data) {
         console.log('got mouse data', data);
-
-        var cursor = $('#' + data.userId)[0];
-        // context.drawImage(cursor, data.offsetX, data.offsetY);
-        $(cursor).css({
-            left:data.offsetX,
-            top:data.offsetY
-        });
+        updateCursor(data);
     });
 
     //send canvas events to socket server, which are then shared to other users
@@ -207,8 +215,7 @@ socket.on('connect', function () {
         console.log(userId, 'is leaving room');
 
         //when a user leaves, delete his cursor
-        var cursor = $('#' + userId)[0];
-        cursor.remove();
+        deleteCursor(userId);
     });
 });
 
@@ -242,6 +249,7 @@ $(canvas)
 .mousemove(function(e){
     // console.log('x', e.offsetX, 'y', e.offsetY);
     //TODO: mod 3 or something like that?
+
     sendSocketData(e, 'mousemove', mouseEventKey);
 });
 
