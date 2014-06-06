@@ -35,24 +35,13 @@ All other dependecies will be resolved via npm and subsequently bower
 #TODOs:
 
 [ ] - after canvas is cleared, last line before clear command is restored when new stroke is drawn
-
-[x] - when clear command is sent, clear redis cache (no need to replay steps)
-
-[x] - introduce concept of rooms. if user is not already in a room (no url hash), create a new room. if user is joining an existing room (roomId hash is present), send command history, business as usual
-
-[x] - option to show other user's cursors - not optional
-
 [ ] - menu for color options
-
-
+[x] - when clear command is sent, clear redis cache (no need to replay steps)
+[x] - introduce concept of rooms. if user is not already in a room (no url hash), create a new room. if user is joining an existing room (roomId hash is present), send command history, business as usual
+[x] - option to show other user's cursors - not optional
 [x] - remove user from room on disconnect
-
-text chat?
 [x] - user names
-
-[ ] - map user names to colors
-
+[x] - map user names to colors
 [x] - save image
-
 [x] - uniquely colored cursors/ cursor badges
 [x] - hide badge when user is performing action
