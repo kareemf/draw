@@ -90,11 +90,7 @@ var createBadge = function(userId, color){
         "class": "badge",
     })
     .css({
-        'position': 'absolute',
-        'border-radius': '50%',
         'background-color': color,
-        'width': '10px',
-        'height': '10px'
     })
     .appendTo('body')[0];
 }

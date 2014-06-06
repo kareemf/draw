@@ -1,3 +1,19 @@
 ul#usersList {
     list-style: none;
 }
+
+.badge{
+    /*background-color is set in JS*/
+    position: absolute;
+    border-radius: 50%;
+    width: 10px;
+    height: 10px;
+}
+
+ul#usersList .badge{
+
+}
+
+.cursor{
+
+}
