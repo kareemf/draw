@@ -112,9 +112,11 @@ var showBadge = function(userId){
     $('#' + userId + '-badge').show();
 }
 
-var createUserListEntry = function(username, color){
+var createUserListEntry = function(userId, username, color){
     //add a (badge, username) tuple to the list of users
-    var li = $('<li>');
+    var li = $('<li>', {
+        'id': userId + '-li'
+    });
 
     li.append(
         $('<div>', {
@@ -129,6 +131,11 @@ var createUserListEntry = function(username, color){
     );
 
     $("#usersList").append(li);
+}
+
+var deleteUserListEntry = function(userId){
+    var li = $('#' + userId + '-li')[0];
+    li.remove();
 }
 
 var randomHexColor = function(){
@@ -176,7 +183,7 @@ var currentUser = new User(guid, username, userColor);
 //create a badge for your own cursor
 createBadge(guid, userColor);
 //add youself to the list of users
-createUserListEntry(username, userColor)
+createUserListEntry(guid, username, userColor)
 
 socket.on('connect', function () {
     console.log('connected');
@@ -207,7 +214,7 @@ socket.on('connect', function () {
 
         createCursor(userId);
         createBadge(userId, userColor);
-        createUserListEntry(username, userColor);
+        createUserListEntry(userId, username, userColor);
 
     });
 
@@ -226,7 +233,7 @@ socket.on('connect', function () {
 
         createCursor(user.guid);
         createBadge(user.guid, user.color)
-        createUserListEntry(user.username, user.color);
+        createUserListEntry(user.guid, user.username, user.color);
 
 
         //inform the new user of your precense in the room
@@ -260,6 +267,7 @@ socket.on('connect', function () {
         //when a user leaves, delete his cursor
         deleteCursor(userId);
         deleteBadge(userId);
+        deleteUserListEntry(userId);
     });
 });
 
