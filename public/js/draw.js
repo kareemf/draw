@@ -69,19 +69,87 @@ var createCursor = function(userId){
     .appendTo('body')[0];
 };
 
-var eventKey;
-var historyKey;
-var mouseEventKey;
+var updateCursor = function(data){
+    var cursor = $('#' + data.userId)[0];
+    // context.drawImage(cursor, data.offsetX, data.offsetY);
+    $(cursor).css({
+        left:data.offsetX,
+        top:data.offsetY
+    });
+}
 
-socket.on('connect', function () {
-    console.log('connected');
+var deleteCursor = function(userId){
+    var cursor = $('#' + userId)[0];
+    cursor.remove();
+}
 
-    //determine which room user belongs in
+var createBadge = function(userId, color){
+    //creates a colored badge which follows each user's cursor
+    return $("<div>", {
+        "id": userId + '-badge',
+        "class": "badge",
+    })
+    .css({
+        'position': 'absolute',
+        'border-radius': '50%',
+        'background-color': color,
+        'width': '10px',
+        'height': '10px'
+    })
+    .appendTo('body')[0];
+}
+
+var updateBadge = function(data){
+    var badge = $('#' + data.userId + '-badge')[0];
+    $(badge).css({
+        left:data.offsetX + 15,
+        top:data.offsetY  + 10
+    });
+}
+
+var deleteBadge = function(userId){
+    var badge = $('#' + userId + '-badge')[0];
+    badge.remove();
+}
+
+var hideBadge = function(userId){
+    $('#' + userId + '-badge').hide();
+}
+
+var showBadge = function(userId){
+    $('#' + userId + '-badge').show();
+}
+
+var createUserListEntry = function(username, color){
+    var li = $('<li>');
+
+    li.append(
+        $('<div>').css({
+            'border-radius': '50%',
+            'background-color': color,
+            'width': '10px',
+            'height': '10px',
+            'display': 'inline-block'
+        })
+    );
+
+    li.append(
+        $('<span>').append(username)
+    );
+
+    $("#usersList").append(li);
+}
+
+var randomHexColor = function(){
+    //borrowed from Paul Irish
+    //(http://www.paulirish.com/2009/random-hex-color-code-snippets)
+    return '#'+Math.floor(Math.random()*16777215).toString(16);
+}
+
+var joinOrCreateRoom = function(){
     var location = window.location;
-    var roomId;
-
-    //join an existing room
     if(location.hash.length){
+        //join an existing room
         //trim the #/
         roomId = location.hash.substr(2);
         console.log('joined room', roomId);
@@ -95,6 +163,35 @@ socket.on('connect', function () {
         location.assign(origin + '/#/' + roomId);
         console.log('created room', roomId);
     }
+    return roomId;
+}
+
+var User = function(guid, username, color){
+    this.guid = guid;
+    this.username = username;
+    this.color = color;
+}
+
+var eventKey;
+var historyKey;
+var mouseEventKey;
+var roomId;
+
+//TODO: better default username
+var username = prompt("Username?", guid.substr(guid.length-12));
+var userColor = randomHexColor();
+var currentUser = new User(guid, username, userColor);
+
+//create a badge for your own cursor
+createBadge(guid, userColor);
+//add youself to the list of users
+createUserListEntry(username, userColor)
+
+socket.on('connect', function () {
+    console.log('connected');
+
+    //determine which room user belongs in
+    roomId = joinOrCreateRoom();
 
     eventKey = 'message-' + roomId;
     historyKey = 'messages-' + roomId;
@@ -105,7 +202,7 @@ socket.on('connect', function () {
 
 
     //tell everyone that you have joined their room
-    socket.emit('roomConnection', roomId, guid);
+    socket.emit('roomConnection', roomId, currentUser);
 
     //after you have told everyone that you have joined thier room,
     //they should shake your hand and tell you about themselves
@@ -113,8 +210,14 @@ socket.on('connect', function () {
         //make a cursor and track movements for existing room users
         console.log(handshake.responder, 'has shaken your hand');
 
-        var userId = handshake.responder;
+        var userId = handshake.responder.guid;
+        var userColor = handshake.responder.color;
+        var username = handshake.responder.username;
+
         createCursor(userId);
+        createBadge(userId, userColor);
+        createUserListEntry(username, userColor);
+
     });
 
     //after you join the room, retrieve and retrace all previous moves
@@ -127,17 +230,20 @@ socket.on('connect', function () {
     });
 
     //listen for other users joining the room
-    socket.on(roomConnectionKey, function(userId){
-        console.log(userId, 'has joined the room');
+    socket.on(roomConnectionKey, function(user){
+        console.log(user, 'has joined the room');
 
-        var cursor = createCursor(userId);
+        createCursor(user.guid);
+        createBadge(user.guid, user.color)
+        createUserListEntry(user.username, user.color);
+
 
         //inform the new user of your precense in the room
         //currently you know about them, but they don't know about you
         var handshake = {
             roomId: roomId,
-            initiator: userId,
-            responder: guid
+            initiator: user,
+            responder: currentUser
         };
         //TODO: make handshake class?
         socket.emit(roomConnectionHandshakeKey, handshake);
@@ -146,13 +252,8 @@ socket.on('connect', function () {
     //track other user's mouse movement
     socket.on(mouseEventKey, function (data) {
         console.log('got mouse data', data);
-
-        var cursor = $('#' + data.userId)[0];
-        // context.drawImage(cursor, data.offsetX, data.offsetY);
-        $(cursor).css({
-            left:data.offsetX,
-            top:data.offsetY
-        });
+        updateCursor(data);
+        updateBadge(data);
     });
 
     //send canvas events to socket server, which are then shared to other users
@@ -166,33 +267,8 @@ socket.on('connect', function () {
         console.log(userId, 'is leaving room');
 
         //when a user leaves, delete his cursor
-        var cursor = $('#' + userId)[0];
-        cursor.remove();
-    });
-
-    //save the canvas on appropriate keypress
-    $(window).keypress(function(e){
-        console.log('keypress', e);
-
-        if(e.keyCode === 115 || e.keyCode === 83){
-            //'s' or 'S'
-            console.log('saving canvas');
-
-            try {
-                var isFileSaverSupported = !!new Blob;
-
-                if(isFileSaverSupported){
-                    canvas.toBlob(function(blob) {
-                        saveAs(blob, 'draw-' + roomId + '.png');
-                    });
-                }
-                else{
-                    console.error('FileSave is not supported');
-                }
-            } catch (e) {
-                console.error('error saving canvas', e);
-            }
-        }
+        deleteCursor(userId);
+        deleteBadge(userId);
     });
 });
 
@@ -226,11 +302,23 @@ $(canvas)
 .mousemove(function(e){
     // console.log('x', e.offsetX, 'y', e.offsetY);
     //TODO: mod 3 or something like that?
+
     sendSocketData(e, 'mousemove', mouseEventKey);
+    updateBadge({userId: guid, offsetX: e.offsetX, offsetY: e.offsetY});
 });
 
-$(window).keypress(function(e){
+$(window)
+.mousedown(function(e1) {
+    //hide your badge to keep it out of the way
+    hideBadge(guid);
+})
+.mouseup(function() {
+    //show badge - hidden on mouse down to keep out of the way
+    showBadge(guid);
+})
+.keypress(function(e){
     console.log('keypress', e);
+    //clear the canvas on appropriate keypress
     if(e.keyCode === 99 || e.keyCode === 67){
         //'c' or 'C'
         clearCanvas();
@@ -238,5 +326,25 @@ $(window).keypress(function(e){
             type: 'clear',
             userId: guid
         });
+    }
+    //save the canvas on appropriate keypress
+    else if(e.keyCode === 115 || e.keyCode === 83){
+        //'s' or 'S'
+        console.log('saving canvas');
+
+        try {
+            var isFileSaverSupported = !!new Blob;
+
+            if(isFileSaverSupported){
+                canvas.toBlob(function(blob) {
+                    saveAs(blob, 'draw-' + roomId + '.png');
+                });
+            }
+            else{
+                console.error('FileSave is not supported');
+            }
+        } catch (e) {
+            console.error('error saving canvas', e);
+        }
     }
 });

@@ -30,8 +30,10 @@ var socketIdsToUserIds = {};
 io.sockets.on('connection', function (socket) {
     console.log('user connected to socket', socket.id);
 
-    socket.on('roomConnection', function(roomId, userId){
-        console.log('user', userId, 'connected to room', roomId);
+    socket.on('roomConnection', function(roomId, user){
+        console.log('user', user, 'connected to room', roomId);
+
+        var userId = user.guid;
 
         userIdsToSocketIds[userId] = socket.id;
         socketIdsToUserIds[socket.id] = userId
@@ -45,13 +47,13 @@ io.sockets.on('connection', function (socket) {
         var roomDisconnectionKey = 'userDisconnected-' + roomId;
 
         //inform other users that you have joined the room
-        socket.broadcast.emit(roomConnectionKey, userId);
+        socket.broadcast.emit(roomConnectionKey, user);
 
         //other users will inform you of thier presence in the room
         socket.on(roomConnectionHandshakeKey, function(handshake){
             console.log('handshake:', handshake);
 
-            var socketId = userIdsToSocketIds[handshake.initiator];
+            var socketId = userIdsToSocketIds[handshake.initiator.guid];
             if(socketId){
                 io.sockets.socket(socketId).emit(roomConnectionHandshakeKey, handshake);
             }
@@ -93,7 +95,7 @@ io.sockets.on('connection', function (socket) {
         });
 
         socket.on('disconnect', function () {
-            console.log('user  disconnected from', socket.id);
+            console.log('user disconnected from', socket.id);
 
             // find the user belonging to this socket,
             var userId = socketIdsToUserIds[socket.id];
