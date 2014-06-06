@@ -11,7 +11,8 @@ ul#usersList {
 }
 
 ul#usersList .badge{
-
+    position: initial;
+    display: inline-block;
 }
 
 .cursor{

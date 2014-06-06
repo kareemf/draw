@@ -113,15 +113,14 @@ var showBadge = function(userId){
 }
 
 var createUserListEntry = function(username, color){
+    //add a (badge, username) tuple to the list of users
     var li = $('<li>');
 
     li.append(
-        $('<div>').css({
-            'border-radius': '50%',
+        $('<div>', {
+            'class': 'badge'
+        }).css({
             'background-color': color,
-            'width': '10px',
-            'height': '10px',
-            'display': 'inline-block'
         })
     );
 
