@@ -58,13 +58,9 @@ var sendSocketData = function(e, type, key){
 
 var createCursor = function(userId){
     //create a cursor for the user
-    return $("<img/>", {
+    return $("<div>", {
         "id": userId,
         "class": "cursor",
-        "src": "cur2014.png"
-    })
-    .css({
-        position: 'absolute'
     })
     .appendTo('body')[0];
 };

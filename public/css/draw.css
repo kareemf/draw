@@ -15,5 +15,8 @@ ul#usersList .badge{
 }
 
 .cursor{
-
+    position: absolute;
+    background-image: url("/cur2014.png");
+    width: 13px;
+    height: 19px;
 }
