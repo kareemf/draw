@@ -349,5 +349,10 @@ $(window)
 });
 
 $("#colorpicker").spectrum({
-    color: "#f00"
+    color: "#000000",
+    clickoutFiresChange: true,
+    change: function(color){
+        console.log('changing stroke color to', color.toHexString());
+        context.strokeStyle = color.toHexString();
+    }
 });
