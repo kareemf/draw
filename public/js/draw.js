@@ -28,26 +28,31 @@ var drawData = function(data) {
     if(data.type === 'clear'){
         clearCanvas();
     }
-    else if(data.type === 'lineStart'){
-        context.beginPath();
-        context.lineTo(data.offsetX, data.offsetY);
+    else{
+         if(data.type === 'lineStart'){
+            context.beginPath();
+            context.lineTo(data.offsetX, data.offsetY);
+        }
+        else if(data.type === 'lineCont'){
+            context.lineTo(data.offsetX, data.offsetY);
+        }
+        else if(data.type === 'rect'){
+            context.rect(data.offsetX, data.offsetY, 1, 1);
+        }
+        if(data.extras && data.extras.color){
+            context.strokeStyle = data.extras.color;
+        }
         context.stroke();
     }
-    else if(data.type === 'lineCont'){
-        context.lineTo(data.offsetX, data.offsetY);
-        context.stroke();
-    }
-    else if(data.type === 'rect'){
-        context.rect(data.offsetX, data.offsetY, 1, 1);
-        context.stroke();
-    }
+
 };
 
-var sendSocketData = function(e, type, key){
+var sendSocketData = function(e, type, key, extras){
     var data = {
         offsetX: e.offsetX,
         offsetY: e.offsetY,
-        userId: guid
+        userId: guid,
+        extras: extras
     };
 
     data.type = type;
@@ -277,20 +282,20 @@ $(canvas)
     //place a single 'pixel' at point of click
     context.rect(e1.offsetX, e1.offsetY, 1, 1);
     context.stroke();
-    sendSocketData(e1, 'rect', eventKey);
+    sendSocketData(e1, 'rect', eventKey, {color: context.strokeStyle});
 
     //begin continuous line if user wants to drag
     context.beginPath();
     context.lineTo(e1.offsetX, e1.offsetY);
     context.stroke();
-    sendSocketData(e1, 'lineStart', eventKey);
+    sendSocketData(e1, 'lineStart', eventKey, {color: context.strokeStyle});
 
     $(window).mousemove(function(e2) {
         // console.log('e2 fired');
         // context.rect(e2.offsetX, e2.offsetY,2, 2);
         context.lineTo(e2.offsetX, e2.offsetY);
         context.stroke();
-        sendSocketData(e2, 'lineCont', eventKey);
+        sendSocketData(e2, 'lineCont', eventKey, {color: context.strokeStyle});
     });
 })
 .mouseup(function() {
@@ -345,5 +350,14 @@ $(window)
         } catch (e) {
             console.error('error saving canvas', e);
         }
+    }
+});
+
+$("#colorpicker").spectrum({
+    color: "#000000",
+    clickoutFiresChange: true,
+    change: function(color){
+        // console.log('changing stroke color to', color.toHexString());
+        context.strokeStyle = color.toHexString();
     }
 });

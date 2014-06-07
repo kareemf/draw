@@ -36,6 +36,7 @@ All other dependecies will be resolved via npm and subsequently bower
 
 [ ] - after canvas is cleared, last line before clear command is restored when new stroke is drawn
 [ ] - menu for color options
+[ ] - color bleeding - when a line is drawn with a new color, existing line colors are influenced
 [x] - when clear command is sent, clear redis cache (no need to replay steps)
 [x] - introduce concept of rooms. if user is not already in a room (no url hash), create a new room. if user is joining an existing room (roomId hash is present), send command history, business as usual
 [x] - option to show other user's cursors - not optional
