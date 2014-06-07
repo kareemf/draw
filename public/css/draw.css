@@ -1,4 +1,10 @@
-ul#usersList {
+#mainCanvas{
+    border: 1px solid #d3d3d3;
+    width: 400px;
+    height: 400px;
+}
+
+ul#usersList{
     list-style: none;
 }
 
