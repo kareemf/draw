@@ -347,3 +347,7 @@ $(window)
         }
     }
 });
+
+$("#colorpicker").spectrum({
+    color: "#f00"
+});
