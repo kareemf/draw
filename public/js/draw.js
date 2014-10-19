@@ -204,7 +204,7 @@ socket.on('connect', function () {
     var roomDisconnectionKey = 'userDisconnected-' + roomId;
 
 
-    //tell everyone that you have joined their room
+    //tell the server to tell everyone that you have joined their room
     socket.emit('roomConnection', roomId, currentUser);
 
     //after you have told everyone that you have joined thier room,
