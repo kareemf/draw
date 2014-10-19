@@ -16,7 +16,17 @@ app.get('/', function index(req, res){
     res.sendfile(__dirname + '/public/canvas.html');
 });
 
-var redisclient = redis.createClient();
+var redisPort = 6379;
+var redisHost = 'localhost';
+
+if(process.env.REDISCLOUD_URL){
+    var url = process.env.REDISCLOUD_URL;
+    var redisHost = url.substr(0, url.lastIndexOf(':'));
+    var redisPort = url.substr(url.lastIndexOf(':') + 1, url.length); 
+} 
+console.log('redis: connecting to', redisHost, ':', redisPort);
+var redisclient = redis.createClient(redisPort, redisHost);
+
 
 redisclient.on("error", function (err) {
     console.log("redis error " + err);
