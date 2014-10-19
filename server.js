@@ -16,17 +16,19 @@ app.get('/', function index(req, res){
     res.sendfile(__dirname + '/public/canvas.html');
 });
 
-var redisPort = 6379;
-var redisHost = 'localhost';
-
+var redisclient;
 if(process.env.REDISCLOUD_URL){
-    var url = process.env.REDISCLOUD_URL;
-    var redisHost = url.substr(0, url.lastIndexOf(':'));
-    var redisPort = url.substr(url.lastIndexOf(':') + 1, url.length); 
-} 
-console.log('redis: connecting to', redisHost, ':', redisPort);
-var redisclient = redis.createClient(redisPort, redisHost);
+    var url = require('url');
+    var redisURL = url.parse(process.env.REDISCLOUD_URL);
 
+    console.log('redis: connected to REDISCLOUD')
+    redisclient = redis.createClient(redisURL.port, redisURL.hostname, {no_ready_check: true});
+    redisclient.auth(redisURL.auth.split(":")[1]);
+}
+else{
+    console.log('redis: connecting to localhost');
+    redisclient = redis.createClient(redisPort, redisHost);
+}
 
 redisclient.on("error", function (err) {
     console.log("redis error " + err);
