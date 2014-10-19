@@ -27,7 +27,7 @@ if(process.env.REDISCLOUD_URL){
 }
 else{
     console.log('redis: connecting to localhost');
-    redisclient = redis.createClient(redisPort, redisHost);
+    redisclient = redis.createClient();
 }
 
 redisclient.on("error", function (err) {
