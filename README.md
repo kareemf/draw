@@ -46,3 +46,4 @@ All other dependecies will be resolved via npm and subsequently bower
 [x] - save image
 [x] - uniquely colored cursors/ cursor badges
 [x] - hide badge when user is performing action
+[] - random icon color cannot be white

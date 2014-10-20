@@ -151,7 +151,7 @@ var randomHexColor = function(){
 
 var joinOrCreateRoom = function(){
     var location = window.location;
-    if(location.hash.length){
+    if(location.hash.length > 2){
         //join an existing room
         //trim the #/
         roomId = location.hash.substr(2);

@@ -22,7 +22,7 @@ ul#usersList .badge{
 
 .cursor{
     position: absolute;
-    background-image: url("/cur2014.png");
-    width: 13px;
-    height: 19px;
+    background-image: url("../img/glyphicons_030_pencil.png");
+    width: 24px;
+    height: 24px;
 }
