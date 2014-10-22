@@ -50,8 +50,8 @@ var drawData = function(data) {
 
 var sendSocketData = function(e, type, key, extras){
     var data = {
-        offsetX: e.offsetX,
-        offsetY: e.offsetY,
+        offsetX: e.x,
+        offsetY: e.y,
         userId: guid,
         extras: extras
     };
@@ -299,13 +299,13 @@ $(canvas)
     context.strokeStyle = strokeStyle;
     context.rect(eventLocation.x, eventLocation.y, 1, 1);
     context.stroke();
-    sendSocketData(e1, 'rect', eventKey, {color: context.strokeStyle});
+    sendSocketData(eventLocation, 'rect', eventKey, {color: context.strokeStyle});
 
     //begin continuous line if user wants to drag
     context.beginPath();
     context.lineTo(eventLocation.x, eventLocation.y);
     context.stroke();
-    sendSocketData(e1, 'lineStart', eventKey, {color: context.strokeStyle});
+    sendSocketData(eventLocation, 'lineStart', eventKey, {color: context.strokeStyle});
 
     $(window).on('mousemove touchmove', function(e2) {
         // console.log('e2 fired');
@@ -314,7 +314,7 @@ $(canvas)
         context.strokeStyle = strokeStyle;
         context.lineTo(eventLocation.x, eventLocation.y);
         context.stroke();
-        sendSocketData(e2, 'lineCont', eventKey, {color: context.strokeStyle});
+        sendSocketData(eventLocation, 'lineCont', eventKey, {color: context.strokeStyle});
     });
 })
 .on('mouseup touchend', function() {
@@ -326,8 +326,8 @@ $(canvas)
     // console.log('x', e.offsetX, 'y', e.offsetY);
     //TODO: mod 3 or something like that?
 
-    sendSocketData(e, 'mousemove', mouseEventKey);
     var eventLocation = getEventLocation(e);
+    sendSocketData(eventLocation, 'mousemove', mouseEventKey);
     updateBadge({userId: guid, offsetX: eventLocation.x, offsetY: eventLocation.y});
 });
 
