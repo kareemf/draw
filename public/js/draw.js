@@ -147,7 +147,7 @@ var randomHexColor = function(){
     //borrowed from Paul Irish
     //(http://www.paulirish.com/2009/random-hex-color-code-snippets)
     return '#'+Math.floor(Math.random()*16777215).toString(16);
-}
+};
 
 var joinOrCreateRoom = function(){
     var location = window.location;
@@ -167,7 +167,21 @@ var joinOrCreateRoom = function(){
         console.log('created room', roomId);
     }
     return roomId;
-}
+};
+
+var getEventLocation = function(event){
+    //assume it was a mouse event, check if it was actually touch
+    var x = event.offsetX,
+        y = event.offsetY;
+    
+    if(event.type.indexOf('touch') >= 0){
+        var touch = event.originalEvent.touches[0];
+        x = touch.clientX,
+        y = touch.clientY;
+    }
+
+    return {x:x, y:y};
+};
 
 var User = function(guid, username, color){
     this.guid = guid;
@@ -277,46 +291,48 @@ socket.on('connect', function () {
 });
 
 $(canvas)
-.mousedown(function(e1) {
+.on('mousedown touchstart', function(e1) {
     // console.log('e1 fired');
     //place a single 'pixel' at point of click
-    context.rect(e1.offsetX, e1.offsetY, 1, 1);
+    var eventLocation = getEventLocation(e1);
+    context.rect(eventLocation.x, eventLocation.y, 1, 1);
     context.stroke();
     sendSocketData(e1, 'rect', eventKey, {color: context.strokeStyle});
 
     //begin continuous line if user wants to drag
     context.beginPath();
-    context.lineTo(e1.offsetX, e1.offsetY);
+    context.lineTo(eventLocation.x, eventLocation.y);
     context.stroke();
     sendSocketData(e1, 'lineStart', eventKey, {color: context.strokeStyle});
 
-    $(window).mousemove(function(e2) {
+    $(window).on('mousemove touchmove', function(e2) {
         // console.log('e2 fired');
         // context.rect(e2.offsetX, e2.offsetY,2, 2);
-        context.lineTo(e2.offsetX, e2.offsetY);
+        var eventLocation = getEventLocation(e2);
+        context.lineTo(eventLocation.x, eventLocation.y);
         context.stroke();
         sendSocketData(e2, 'lineCont', eventKey, {color: context.strokeStyle});
     });
 })
-.mouseup(function() {
+.on('mouseup touchend', function() {
     //stop drawing
     // console.log('stop drawing');
-    $(window).unbind('mousemove');
+    $(window).unbind('mousemove touchmove');
 })
-.mousemove(function(e){
+.on('mousemove touchmove', function(e){
     // console.log('x', e.offsetX, 'y', e.offsetY);
     //TODO: mod 3 or something like that?
 
     sendSocketData(e, 'mousemove', mouseEventKey);
-    updateBadge({userId: guid, offsetX: e.offsetX, offsetY: e.offsetY});
+    var eventLocation = getEventLocation(e);
+    updateBadge({userId: guid, offsetX: eventLocation.x, offsetY: eventLocation.y});
 });
 
-$(window)
-.mousedown(function(e1) {
+$(window).on('mousedown touchstart', function(e1) {
     //hide your badge to keep it out of the way
     hideBadge(guid);
 })
-.mouseup(function() {
+.on('mouseup touchend', function() {
     //show badge - hidden on mouse down to keep out of the way
     showBadge(guid);
 })
