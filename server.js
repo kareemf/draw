@@ -2,6 +2,7 @@
 
 var express = require('express'),
     redis = require('redis'),
+    async = require('async'),
     app = express();
 
 app.use(express.static(__dirname + '/public'));
@@ -35,9 +36,9 @@ redisclient.on("error", function (err) {
 });
 
 var userIdsToSocketIds = {};
+var userIdsToRoomIds = {};
+var userIdsByRoom = {};
 var socketIdsToUserIds = {};
-
-//todo: track users in room
 
 io.sockets.on('connection', function (socket) {
     console.log('user connected to socket', socket.id);
@@ -47,8 +48,16 @@ io.sockets.on('connection', function (socket) {
 
         var userId = user.guid;
 
+        userIdsToRoomIds[userId] = roomId;
         userIdsToSocketIds[userId] = socket.id;
-        socketIdsToUserIds[socket.id] = userId
+        socketIdsToUserIds[socket.id] = userId;
+
+        var userIdsInRoom = userIdsByRoom[roomId];
+        if(!userIdsInRoom){
+            userIdsInRoom = [];
+        }
+        userIdsInRoom.push(userId);
+        userIdsByRoom[roomId] = userIdsInRoom;
 
         //will only listen to events targeting this room;
         var eventKey = 'message-' + roomId;
@@ -91,7 +100,7 @@ io.sockets.on('connection', function (socket) {
 
             //if screen was cleared, flush history - no longer needed
             if(data.type === 'clear'){
-                console.log('clearing REDIS');
+                console.log('redis: clearing key', historyKey);
                 redisclient.del(historyKey);
             }
             //add message to history
@@ -117,7 +126,31 @@ io.sockets.on('connection', function (socket) {
             // inform everyone of their disconnection
             socket.broadcast.emit(roomDisconnectionKey, userId);
 
-            //TODO: flush redis when room is empty?
+            var roomId = userIdsToRoomIds[userId];
+            var userIdsInRoom = userIdsByRoom[roomId];
+            if(userIdsInRoom && userIdsInRoom.indexOf(userId) >= 0){
+                userIdsInRoom.splice(userIdsInRoom.indexOf(userId), 1);
+                userIdsByRoom[roomId] = userIdsInRoom;
+            }
+
+            //flush redis keys for the room if room is now empty
+            if(!userIdsInRoom.length){
+                var postKeysDelete = function(err){
+                    if(err){
+                        return console.error('redis error deleting keys for room', roomId, ':', err);
+                    }
+                    console.log('redis: deleted all keys for empty room', roomId);
+                };
+                redisclient.keys('*-' + roomId, function(err, keys) {
+                    if(err){
+                        return console.error('redis error retrieving keys for room', roomId, ':', err);
+                    }
+                    async.each(keys, function(key, deleteKeyCallback) {
+                        redisclient.del(key, deleteKeyCallback);
+                    }, postKeysDelete)
+                });
+            }
+
         });
     });
 });
