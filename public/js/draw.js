@@ -10,7 +10,7 @@ var guid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 var canvas = document.getElementById('mainCanvas');
 var context = canvas.getContext('2d');
 
-var socket = io.connect('http://localhost:3000');
+var socket = io.connect(window.location.origin);
 
 var clearCanvas = function(){
     // Store the current transformation matrix
