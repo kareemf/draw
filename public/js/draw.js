@@ -9,6 +9,7 @@ var guid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 
 var canvas = document.getElementById('mainCanvas');
 var context = canvas.getContext('2d');
+var strokeStyle = "#000000";
 
 var socket = io.connect(window.location.origin);
 
@@ -295,6 +296,7 @@ $(canvas)
     // console.log('e1 fired');
     //place a single 'pixel' at point of click
     var eventLocation = getEventLocation(e1);
+    context.strokeStyle = strokeStyle;
     context.rect(eventLocation.x, eventLocation.y, 1, 1);
     context.stroke();
     sendSocketData(e1, 'rect', eventKey, {color: context.strokeStyle});
@@ -309,6 +311,7 @@ $(canvas)
         // console.log('e2 fired');
         // context.rect(e2.offsetX, e2.offsetY,2, 2);
         var eventLocation = getEventLocation(e2);
+        context.strokeStyle = strokeStyle;
         context.lineTo(eventLocation.x, eventLocation.y);
         context.stroke();
         sendSocketData(e2, 'lineCont', eventKey, {color: context.strokeStyle});
@@ -374,6 +377,6 @@ $("#colorpicker").spectrum({
     clickoutFiresChange: true,
     change: function(color){
         // console.log('changing stroke color to', color.toHexString());
-        context.strokeStyle = color.toHexString();
+        strokeStyle = color.toHexString();
     }
 });
